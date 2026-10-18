@@ -126,19 +126,29 @@ class LivePlot:
         return display_values
 
     def set_y_display(self, y_scale='linear', need_absolute_y=False):
-        """
-        Configure how future primary y-values are displayed.
-
-        This changes only the live-plot display settings.
-        Raw measurement data is not modified.
-        """
+        """Refresh all runs without changing their raw measurement data."""
         if y_scale not in ('linear', 'log'):
             raise ValueError(f'Unsupported y-axis scale: {y_scale}')
 
         self.y_scale = y_scale
         self.need_absolute_y = need_absolute_y
 
+        # Refresh every run using its original current values.
+        for run in self.measurement_runs:
+            run['line'].set_ydata( self._get_display_y(run['y_data']) )
+
+        # Recalculate limits and apply the selected axis scale.
+        self.ax.relim()
         self.ax.set_yscale(self.y_scale)
+        self.ax.autoscale_view()
+
+        # Indicate when the displayed current is an absolute value.
+        if self.need_absolute_y:
+            ylabel = self.ylabel.replace('Current', '|Current|')
+        else:
+            ylabel = self.ylabel
+
+        self.ax.set_ylabel(ylabel, color=self.color)
         self.canvas.draw_idle()
     
     def _setup_plot(self):

@@ -155,7 +155,33 @@ def save_and_plot_data(voltage_array, current_array, light_array, device_info: D
             print('Error: Creating directory: ' + device_info.plot_dir)
 
     try:
-        plt.savefig(os.path.join(device_info.plot_dir, f'{filename}.png'))
+        if plot_type == 'IV':
+            # Save the linear IV plot with signed current values.
+            fig.savefig(
+                os.path.join(device_info.plot_dir, f'{filename}_linear.png')
+            )
+
+            # Change only the displayed current for the logarithmic plot.
+            display_current  = [
+                abs(value) if value != 0 else float('nan')
+                for value in plot_current
+            ]
+
+            ax1.lines[0].set_ydata(display_current )
+            ax1.relim()
+            ax1.set_yscale('log')
+            ax1.autoscale_view()
+            ax1.set_ylabel('Device |Current| (mA)', color='black')
+
+            fig.savefig(
+                os.path.join(device_info.plot_dir, f'{filename}_log.png')
+            )
+        else:
+            # PNG export for LI and LIV.
+            fig.savefig(
+                os.path.join(device_info.plot_dir, f'{filename}.png')
+            )
+
     except Exception as e:
         print(f"Failed to save plot: {e}")
     finally:
